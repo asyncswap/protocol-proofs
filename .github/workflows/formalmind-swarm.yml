@@ -429,7 +429,7 @@ jobs:
   # Labels the workflow's own token sets don't start new runs, so hand the turn on directly.
   next:
     needs: [dispatch, agent]
-    if: ${{ always() && needs.agent.result != 'skipped' && needs.agent.result != '' }}
+    if: ${{ always() && needs.agent.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - env:
