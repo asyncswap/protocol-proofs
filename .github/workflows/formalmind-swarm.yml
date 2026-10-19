@@ -5,7 +5,7 @@ name: formalmind swarm
 # `fm:*` labels the state machine, pull requests the deliverables, and three pinned issues
 # (ledger, notebook, chief updates) are found or opened by title on the first run.
 #
-# Every 10 minutes, on an `fm:` label change, or right after a run that left work behind,
+# Every 10 minutes (GitHub's schedule), on an `fm:` label change, or right after a run that left work behind,
 # the dispatcher sums the ledger and hands out work within the budget:
 #   specs mode: one job at a time, in order answer, merge, review, revise, resume, new, plan.
 #   audit mode: up to `team` jobs at once on disjoint items, plus the POC writer for findings.
