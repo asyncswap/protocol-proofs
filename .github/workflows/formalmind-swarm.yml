@@ -56,14 +56,25 @@ jobs:
       jobs: ${{ steps.pick.outputs.jobs }}
       config: ${{ steps.config.outputs.config }}
       parallel: ${{ steps.config.outputs.parallel }}
+    env:
+      FORMALMIND_APP_ID: ${{ secrets.FORMALMIND_APP_ID }}
     steps:
+      # With the formalmind App's secrets the swarm acts as formalmind[bot]: its pull requests are allowed where an
+      # organization forbids Actions from opening them, and its labels start the next run. Without them, the workflow token.
+      - name: formalmind App token
+        id: app
+        if: ${{ env.FORMALMIND_APP_ID != '' }}
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.FORMALMIND_APP_ID }}
+          private-key: ${{ secrets.FORMALMIND_APP_PRIVATE_KEY }}
+      - name: Token for this run
+        run: echo "GH_TOKEN=${{ steps.app.outputs.token || github.token }}" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           sparse-checkout: .formal
       - name: Read .formal/swarm.json and find the pinned issues
         id: config
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           R="$GITHUB_REPOSITORY"
           c=.formal/swarm.json
@@ -94,7 +105,6 @@ jobs:
       - name: Budget, then pick the jobs
         id: pick
         env:
-          GH_TOKEN: ${{ github.token }}
           CFG: ${{ steps.config.outputs.config }}
           PARALLEL: ${{ steps.config.outputs.parallel }}
           FORCE_ROLE: ${{ inputs.role }}
@@ -224,11 +234,23 @@ jobs:
       NUMBER: ${{ matrix.job.number }}
       KIND: ${{ matrix.job.kind }}
       CAP: ${{ matrix.job.cap }}
-      GH_TOKEN: ${{ github.token }}
+      FORMALMIND_APP_ID: ${{ secrets.FORMALMIND_APP_ID }}
     steps:
+      # With the formalmind App's secrets the swarm acts as formalmind[bot]: its pull requests are allowed where an
+      # organization forbids Actions from opening them, and its labels start the next run. Without them, the workflow token.
+      - name: formalmind App token
+        id: app
+        if: ${{ env.FORMALMIND_APP_ID != '' }}
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.FORMALMIND_APP_ID }}
+          private-key: ${{ secrets.FORMALMIND_APP_PRIVATE_KEY }}
+      - name: Token for this run
+        run: echo "GH_TOKEN=${{ steps.app.outputs.token || github.token }}" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app.outputs.token || github.token }}
       - name: Check out the branch for this job
         id: ctx
         run: |
@@ -312,7 +334,7 @@ jobs:
         if: ${{ env.ROLE != 'merge' || env.MODE == 'answer' || steps.gate.outputs.clean == 'true' }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ github.token }}
+          github_token: ${{ steps.app.outputs.token || github.token }}
           include_fix_links: "false"
           prompt: |
             You are the ${{ env.ROLE }} of the formalmind swarm and it is your turn. Read

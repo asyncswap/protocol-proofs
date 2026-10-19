@@ -26,6 +26,8 @@ repository for you. To set it up yourself instead:
 
 3. **Add the secrets** under Settings → Secrets and variables → Actions:
    - `ANTHROPIC_API_KEY` (required): the model the agents run on.
+   - `FORMALMIND_APP_ID` and `FORMALMIND_APP_PRIVATE_KEY` (optional): the swarm then acts as
+     formalmind[bot]. Needed where the organization doesn't let Actions open pull requests.
    - `PROTOCOL_READ_TOKEN` (only for a private protocol repository): a fine-grained token
      with read access to its contents.
 4. **Allow Actions to open pull requests:** Settings → Actions → General → Workflow
