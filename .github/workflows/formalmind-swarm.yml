@@ -381,8 +381,8 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY || steps.token.outputs.model_key }}
           github_token: ${{ steps.token.outputs.token }}
           include_fix_links: "false"
-          # The swarm's own labels start its next runs, so its bot must be allowed to.
-          allowed_bots: "formalmind[bot],formalmind"
+          # The swarm starts its own next runs (its bot's labels, the hand-off job), so both bots are allowed to.
+          allowed_bots: "formalmind[bot],formalmind,github-actions[bot],github-actions"
           prompt: |
             You are the ${{ env.ROLE }} of the formalmind swarm and it is your turn. Read
             .github/formalmind/README.md, ${{ steps.ctx.outputs.swarm_mode == 'audit' && 'then .github/formalmind/audit.md, ' || '' }}then
