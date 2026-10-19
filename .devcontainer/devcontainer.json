@@ -1,0 +1,13 @@
+{
+  "name": "Lean 4 + Mathlib Dev",
+  "image": "ghcr.io/leanprover-community/mathlib4/gitpod",
+  "onCreateCommand": "lake exe cache get!",
+  "updateContentCommand": "lake update && lake build",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "leanprover.lean4"
+      ]
+    }
+  }
+}

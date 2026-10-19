@@ -1,0 +1,10 @@
+{
+	"protocol": "owner/repo",
+	"commit": "",
+	"mode": "specs",
+	"maintainer": "your-github-handle",
+	"team": 2,
+	"dailyUsd": 5,
+	"monthlyUsd": 150,
+	"report": ""
+}
