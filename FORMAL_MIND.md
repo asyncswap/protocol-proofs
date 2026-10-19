@@ -1,3 +1,22 @@
 # Formal Mind changelog
 
 Newest first. Every merged PR adds an entry.
+
+## 2026-10-19 audit: pool initialize and add-liquidity gating
+
+**Trigger:** swarm issue #12
+
+**What:** New `ProtocolProofs/Audit/PoolInit.lean` (and the `ProtocolProofs` library in
+`lakefile.toml`). Models `AsyncSwap._beforeInitialize` (AsyncSwap.sol:162-167),
+`_beforeAddLiquidity` (AsyncSwap.sol:190-197) and the v4 dispatch in
+`Hooks.beforeModifyLiquidity` (Hooks.sol:195-206) as stateless functions over an abstract
+`PoolKey`.
+
+**Proved:** `beforeInitialize_accepts_iff` (accepted iff one side is the numeraire and
+`fee = 0x800000`), `beforeInitialize_error` (which error, in Solidity order),
+`beforeAddLiquidity_reverts`, `modifyLiquidity_passes_only_nonpositive`,
+`liquidity_never_positive` / `fresh_pool_liquidity_zero` (no sequence of `modifyLiquidity`
+calls can give an AsyncSwap pool positive liquidity).
+
+**Result:** the invariant holds; no finding. Tick spacing and the hook address are not
+constrained by the hook itself (PoolManager checks them), which is noted, not a bug.
