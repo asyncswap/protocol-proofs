@@ -1,10 +1,10 @@
 {
-	"protocol": "owner/repo",
-	"commit": "",
-	"mode": "specs",
-	"maintainer": "your-github-handle",
-	"team": 2,
-	"dailyUsd": 5,
+	"protocol": "asyncswap/protocol",
+	"commit": "e230f5b6b54bfb88e75e5e0eaadb04367a445769",
+	"mode": "audit",
+	"maintainer": "mmsaki",
+	"team": 3,
+	"dailyUsd": 10,
 	"monthlyUsd": 150,
-	"report": ""
+	"report": "FM_AUDIT_10_2026.md"
 }
