@@ -20,7 +20,9 @@ unticked boxes are work they did not finish.
   the thread. Scope matches the issue. Changelog entry at the top of `FORMAL_MIND.md`, honest.
 - The PR targets `main`, its body contains `Closes #n`, and the only files touched are under
   the Lean sources (every `.lean` file outside `.lake/` and `protocol/`), `README.md`, `.formal/plan.md`,
-  `README.spec.md` or `FORMAL_MIND.md`. Anything else is a bounce.
+  `README.spec.md` or `FORMAL_MIND.md`; in an audit also `poc/` and `REPORT_FILE`. `lakefile.toml` may change
+  only to add a `[[lean_lib]]` for new Lean sources (and its name in `defaultTargets`), so the build compiles
+  them; any other change to it is held for the maintainer. Anything else is a bounce.
 - Being behind `main` is not a reason to bounce. The workflow already merged `origin/main`
   into your checkout and built the result, so what you see is what `main` will contain.
   Conflicts were handled before you started (the PR would have been bounced).
