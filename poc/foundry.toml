@@ -1,0 +1,9 @@
+# Proofs of concept for the audit's findings, run against the protocol checked out (read-only) under ../protocol.
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["lib", "../protocol/lib", "../protocol/dependencies"]
+allow_paths = ["../protocol"]
+# Import the audited contracts as `protocol/...`; the protocol's own remappings are added by the POC writer when needed.
+remappings = ["protocol/=../protocol/src/", "forge-std/=lib/forge-std/src/"]

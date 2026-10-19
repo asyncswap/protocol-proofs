@@ -4,7 +4,7 @@ Read this when `SWARM_MODE=audit`. It changes what the swarm is for; the rest of
 (turns, notebook, ledger, `/ask`) still holds.
 
 An audit looks at one frozen commit of the protocol (`AUDIT_COMMIT`, checked out read-only
-under `protocol/`) and ends with one report, `REPORT_FILE` at the root of this repository.
+under `protocol/`) and ends with one report, `REPORT_FILE` (under `audit/`, started from `.formal/templates/FM_AUDIT.md`).
 Every agent works at once, each on its own item, so items must stay disjoint.
 
 ## Labels in audit mode

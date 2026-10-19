@@ -93,7 +93,9 @@ jobs:
           echo "token=${token:-${{ github.token }}}" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: .formal
+          sparse-checkout: |
+            .formal
+            audit
       - name: Read .formal/swarm.json and find the pinned issues
         id: config
         run: |
@@ -115,7 +117,7 @@ jobs:
           notebook=$(pinned "Swarm notebook" "One task list per run, crossed out as the work happens. Written by the swarm.")
           chief=$(pinned "Chief updates" "The chief's daily update to the maintainer.")
           report=$(jq -r '.report // ""' "$c")
-          [ "$mode" = audit ] && [ -z "$report" ] && report=$(ls FM_AUDIT_*.md 2>/dev/null | tail -1)
+          [ "$mode" = audit ] && [ -z "$report" ] && report=$(ls audit/FM_AUDIT_*.md FM_AUDIT_*.md 2>/dev/null | head -1)
           team=$(jq -r '.team // 2' "$c")
           parallel=1; [ "$mode" = audit ] && parallel=$team
           cfg=$(jq -c --arg l "$ledger" --arg n "$notebook" --arg h "$chief" --arg r "$report" \
