@@ -422,8 +422,9 @@ jobs:
         run: |
           usd=""
           [ -n "$EXECUTION_FILE" ] && [ -f "$EXECUTION_FILE" ] && usd=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
-          # No cost file means the run was cut off: count the whole cap, so the budget stays honest.
-          [ -z "$usd" ] && [ "$OUTCOME" != skipped ] && usd="$CAP"
+          # No cost file: a run cut off mid-work (cancelled, timed out) may have used the model, so it counts its cap;
+          # one that failed before starting did not.
+          [ -z "$usd" ] && [ "$OUTCOME" = cancelled ] && usd="$CAP"
           usd=$(printf '%.2f' "${usd:-0}")
           ref=""; [ -n "$NUMBER" ] && ref="#$NUMBER"
           printf '<!-- fm-cost role=%s ref=%s usd=%s run=%s mode=%s -->\n**%s** %s— $%s, %s ([run](%s))\n' \
