@@ -7,7 +7,7 @@ Solidity being modelled:
     `return (amount / 997) * 3 + ((amount % 997) * 3) / 997;`
 * `AsyncSwap.executeOrder` (src/AsyncSwap.sol:252-253) passes
     `fee = calculatePoolFee(key.fee, orders[id].amountOutMin)` into `fill`.
-* `AsyncFiller.fill` (src/libraries/AsyncFiller.sol:121-127), output leg:
+* `AsyncFiller.fill` (src/libraries/AsyncFiller.sol:119-125), output leg:
     `settle(hook, amountOutMin + fee)` (native; ERC20 is pre-settled by the Router with the
     same `live + calculatePoolFee(live)`, src/Router.sol:262,275),
     `take(owner, amountOutMin)`, and if `fee != 0`, `take(feeVault, fee, claims)`.
@@ -33,9 +33,9 @@ structure OutputLeg where
   vault : Nat
   deriving Repr
 
-/-- Output leg of `AsyncFiller.fill` for a stored `amountOutMin`. `none` is a revert: the
-order is missing (`amountOutMin = 0` cannot be stored, see `updatePrice`'s `ZeroAmount`), or
-`amountOutMin + fee` overflows `uint256`. -/
+/-- Output leg of `AsyncFiller.fill` for a stored `amountOutMin`. `none` is a revert:
+`amountOutMin + fee` overflows `uint256`. A missing order (`amountIn = 0`, AsyncFiller.sol:108)
+is not modelled. -/
 def fillOutput (amountOutMin : Nat) : Option OutputLeg :=
   let fee := poolFee amountOutMin
   if amountOutMin < UINT256 ∧ amountOutMin + fee < UINT256 then
