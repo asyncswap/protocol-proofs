@@ -2,6 +2,30 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: executor authorization is revocable and scoped to one (pool, maker)
+
+**Trigger:** swarm issue #30
+
+**What:** New `ProtocolProofs/Audit/Executor.lean` models `asyncOrders[pool].isExecutor[maker][executor]`
+and `nonceUsed[maker][nonce]` under `setExecutor` (src/AsyncSwap.sol:332-335), `setExecutorWithSig`
+with `_verify` inlined (src/AsyncSwap.sol:339-358, 395-405) and `invalidateNonce`
+(src/AsyncSwap.sol:382-386), and the authorization guards of `fill`, `cancel`, `updatePrice`
+(src/libraries/AsyncFiller.sol:104, 139, 78) and `_createOrder` (src/AsyncSwap.sol:306). The
+maker's signature is an abstract predicate over the whole `SetExecutor` struct (EIP-712 assumed
+collision-free).
+
+**Proved:** `revoke_executor_blocks_fill`, `revoke_executor_blocks_cancel` (unless the executor
+is the maker), `revoke_executor_blocks_create`, `revoke_with_sig_blocks_fill`,
+`executor_never_updates_price`, `setExecutor_scoped_to_owner_pool`, `setExecutor_no_cross_maker`,
+`setExecutor_no_cross_pool`, `setExecutorWithSig_scoped`, `setExecutorWithSig_no_replay`,
+`invalidateNonce_blocks_grant`, `step_reenable_needs_maker`, `revocation_sticks`.
+
+**Result:** no finding. A revoked executor comes back only through the maker's own
+`setExecutor(p, e, true)` or a fresh, unexpired `SetExecutor` grant the maker signed for exactly
+that pool and executor with `allow = true`. An old unsubmitted grant with an unused nonce is still
+valid after a direct revoke; the maker kills it with `invalidateNonce` (by design, as with any
+signed permit).
+
 ## 2026-10-20 — audit: native ETH sent to the Router is never stranded (H-05 fix holds)
 
 **Trigger:** swarm issue #21
