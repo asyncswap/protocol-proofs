@@ -2,6 +2,28 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: cancel refunds exactly the escrow to the owner, once
+
+**Trigger:** swarm issue #29
+
+**What:** New `ProtocolProofs/Audit/Cancel.lean` models `AsyncFiller.cancel`
+(src/libraries/AsyncFiller.sol:136-155) on the #17 order book, returning the new book and the
+one refund (recipient, amount), and the three ways to reach it: the hook's `cancelOrder` with
+`executor = msg.sender` (src/AsyncSwap.sol:265-268), `Router.cancelOrder` with its
+`msg.sender == order.owner` check (src/Router.sol:211-217, 278-279) and `Router.cancelWithSig`
+with the maker's signature (src/Router.sol:191-202).
+
+**Proved:** `cancel_refunds_owner_exact` (the refund goes to `order.owner` whoever the executor
+is, and equals the record's non-zero `amountIn`), `cancel_auth`, `cancel_deletes_order` (record
+zeroed, every other order untouched), `cancel_refund_to_record_owner` (with keccak
+collision-free, the recipient owns the deleted record), `cancel_rejects_closed`,
+`no_double_cancel`, `no_cancel_after_fill`, `no_fill_after_cancel`, `no_fillOrder_after_cancel`
+(through #19's `executeOrder` and `fillOrder` too), `routerCancelOrder_onlyMaker`,
+`routerCancelWithSig_refunds_owner`, `hookCancelOrder_stranger_reverts`.
+
+**Result:** no finding: no double refund, no refund to the executor or relayer. PoolManager
+settle/take success is assumed; the `cancelWithSig` nonce map is outside the model.
+
 ## 2026-10-20 — audit: native ETH sent to the Router is never stranded (H-05 fix holds)
 
 **Trigger:** swarm issue #21
