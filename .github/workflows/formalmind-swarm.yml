@@ -87,6 +87,9 @@ jobs:
               echo "::add-mask::$model"
               echo "model_key=$model" >> "$GITHUB_OUTPUT"
               echo "ANTHROPIC_BASE_URL=$(jq -r .model_base_url <<<"$reply")" >> "$GITHUB_ENV"
+              # Metered runs stop at zero: formal.team refuses every model call until credits are added.
+              credits=$(jq -r '.credits_cents // empty' <<<"$reply" 2>/dev/null || true)
+              if [ -n "$credits" ] && awk -v c="$credits" 'BEGIN { exit !(c <= 0) }'; then echo "out_of_credits=true" >> "$GITHUB_OUTPUT"; fi
             fi
           fi
           echo "GH_TOKEN=${token:-${{ github.token }}}" >> "$GITHUB_ENV"
@@ -133,6 +136,7 @@ jobs:
           FORCE_ROLE: ${{ inputs.role }}
           FORCE_NUMBER: ${{ inputs.number }}
           SCHEDULE: ${{ github.event.schedule }}
+          OUT_OF_CREDITS: ${{ steps.token.outputs.out_of_credits }}
         run: |
           R="$GITHUB_REPOSITORY"
           cfg() { jq -r "$1" <<<"$CFG"; }
@@ -146,6 +150,13 @@ jobs:
           spent_month=$(sum < ledger.txt); spent_today=$(grep "^$today" ledger.txt | sum)
           remaining=$(awk -v d="$DAILY" -v m="$MONTHLY" -v t="$spent_today" -v mo="$spent_month" 'BEGIN { a = d - t; b = m - mo; printf "%.2f", (a < b ? a : b) }')
           echo "spent today \$$spent_today, this month \$$spent_month, remaining \$$remaining"
+          if [ "$OUT_OF_CREDITS" = true ]; then
+            note="Paused: this account is out of Formal Mind credits, so formal.team refuses model calls. Add credits at https://formal.team/billing and the next run picks up where it left off."
+            echo "::notice title=Out of credits::$note"
+            echo "### ⏸ Out of Formal Mind credits" >> "$GITHUB_STEP_SUMMARY"; echo "$note" >> "$GITHUB_STEP_SUMMARY"
+            grep -q "^$today.*fm-paused credits" ledger.txt || gh issue comment -R "$R" "$LEDGER" --body "<!-- fm-paused credits --> **dispatcher** $note" || true
+            echo "jobs=[]" >> "$GITHUB_OUTPUT"; exit 0
+          fi
           cap_of() { case "$1" in plan) echo "$CAP_PLAN" ;; prove) echo "$CAP_PROVE" ;; poc) echo "$CAP_POC" ;; review) echo "$CAP_REVIEW" ;; merge) echo "$CAP_MERGE" ;; chief) echo "$CAP_CHIEF" ;; esac; }
           is_pr() { gh pr view -R "$R" "$1" --json number >/dev/null 2>&1; }
           # Runs already working, so a parallel pick never takes their items twice.
@@ -287,6 +298,9 @@ jobs:
               echo "::add-mask::$model"
               echo "model_key=$model" >> "$GITHUB_OUTPUT"
               echo "ANTHROPIC_BASE_URL=$(jq -r .model_base_url <<<"$reply")" >> "$GITHUB_ENV"
+              # Metered runs stop at zero: formal.team refuses every model call until credits are added.
+              credits=$(jq -r '.credits_cents // empty' <<<"$reply" 2>/dev/null || true)
+              if [ -n "$credits" ] && awk -v c="$credits" 'BEGIN { exit !(c <= 0) }'; then echo "out_of_credits=true" >> "$GITHUB_OUTPUT"; fi
             fi
           fi
           echo "GH_TOKEN=${token:-${{ github.token }}}" >> "$GITHUB_ENV"
