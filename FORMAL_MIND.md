@@ -2,6 +2,28 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: BaseHook callbacks gated to PoolManager; permission bits match overrides
+
+**Trigger:** swarm issue #22
+
+**What:** New `ProtocolProofs/Audit/HookGating.lean` models the ten external callbacks of
+`BaseHook` (src/BaseHook.sol:36-207), the `onlyPoolManager` modifier
+(src/ImmutableState.sol:15-18), the default `HookNotImplemented` reverts, the three internal
+hooks `AsyncSwap` overrides (`_beforeInitialize`, `_beforeAddLiquidity`, `_beforeSwap`;
+src/AsyncSwap.sol:162, 190, 271) and `getHookPermissions` (src/AsyncSwap.sol:170-187). The
+issue named `Spec/Audit/`; the audit lives under `ProtocolProofs/Audit/`. No caller type from
+#5 is on `main`, so addresses are naturals as in #12's `PoolInit.lean`.
+
+**Proved:** `hook_callbacks_onlyPoolManager` (any caller but the PoolManager reverts
+`NotPoolManager`, on every callback), `runsBody_sender`, one `<callback>_gate` theorem per
+callback, `hook_permissions_match_overrides` (enabled ⇔ overridden for all ten callbacks;
+`beforeSwapReturnDelta` sits on the enabled, overridden `beforeSwap`; the other return-delta
+flags are off, so v4's pairing rule in Hooks.sol:111-119 holds), `enabled_runsBody` (the
+PoolManager never hits a default revert).
+
+**Result:** no finding. The external callbacks are not `virtual`, so the gate cannot be
+dropped by a subclass; callback bodies are abstract here (#12 covers their logic).
+
 ## 2026-10-20 — audit: native ETH sent to the Router is never stranded (H-05 fix holds)
 
 **Trigger:** swarm issue #21
