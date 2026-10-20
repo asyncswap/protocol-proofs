@@ -2,6 +2,27 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: native ETH sent to the Router is never stranded (H-05 fix holds)
+
+**Trigger:** swarm issue #21
+
+**What:** New `ProtocolProofs/Audit/RouterNative.lean` tracks the raw ETH of the Router and
+the hook and the hook's transient `PENDING_NATIVE_DEPOSIT` through every Router entry point:
+`swap` with its `msg.value` checks and native settle (src/Router.sol:119-124, 254;
+src/libraries/CurrencySettler.sol:21-22), `fillOrder` with the live-price check and forward to
+the hook (src/Router.sol:152-163) on top of #19's `executeOrder`, the non-payable
+`swapWithSig`/`cancelWithSig`/`cancelOrder`, and a plain transfer (the Router has no
+`receive`/`fallback`).
+
+**Proved:** `swap_native_exact` (native input: `msg.value = amountIn`, all of it settled to the
+PoolManager; ERC20 input: `msg.value = 0`), `fillOrder_native_exact` (native output:
+`msg.value = amountOutMin + calculatePoolFee(amountOutMin)` live, forwarded and pulled in full,
+ledger restored; ERC20 output: `msg.value = 0`), `router_no_stranded_eth` (after any successful
+Router call the Router's and the hook's ETH and the pending ledger are unchanged).
+
+**Result:** no finding; H-05 is not present at e230f5b. Forced ETH sends (`selfdestruct`,
+coinbase) are outside the model; PoolManager success is assumed.
+
 ## 2026-10-20 — audit: updatePrice front-run is bounded by maxPrice; native debit equals fill pull
 
 **Trigger:** swarm issue #19
