@@ -2,6 +2,25 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 audit: two-step ownership handover
+
+**Trigger:** swarm issue #16
+
+**What:** New `ProtocolProofs/Audit/Ownership.lean`. Models the `owner` / `pendingOwner`
+slots of `AsyncSwap` (AsyncSwap.sol:40-43): the constructor (:120-130), `onlyOwner`
+(:94-97), `transferOwnership` (:135-139) and `acceptOwnership` (:142-147). Every other
+entry point is the identity on these slots (nothing else in `protocol/src` writes them).
+
+**Proved:** `transferOwnership_onlyOwner`, `acceptOwnership_onlyPending`,
+`acceptOwnership_clears_pending`, `owner_reachable_only_via_accept` (the owner changes only
+by `acceptOwnership` from the pending address), `pending_set_only_by_owner`,
+`reachable_owner_ne_zero` (no reachable state has `owner == address(0)`, assuming the EVM
+fact that `msg.sender` is never `address(0)`).
+
+**Result:** the invariant holds; no finding. The owner can re-nominate over a pending
+nominee at any time and cannot cancel to `address(0)` (only by nominating itself); both are
+by design, not bugs.
+
 ## 2026-10-19 — audit: owner sweep and FeeVault collect cannot reach maker escrow
 
 **Trigger:** swarm issue #11
