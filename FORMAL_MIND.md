@@ -2,6 +2,18 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-19 — audit: fee split in `AsyncFiller.fill` is exact
+
+**Trigger:** swarm issue #10
+
+**What:** New `ProtocolProofs/Audit/FeeSplit.lean` models `calculatePoolFee`
+(src/AsyncSwap.sol:226) and the output leg of `AsyncFiller.fill`
+(src/libraries/AsyncFiller.sol:119-125) at e230f5b. Proved `fill_fee_split_exact`
+(maker + vault = gross, no dust) and `fill_maker_ge_minimum` (maker gets exactly the signed
+minimum), plus `poolFee_eq` (the split formula is `amount * 3 / 997` rounded down),
+`poolFee_le_30bps`, `poolFee_floor_30bps` and `fillOutput_isSome` (no overflow revert below
+`2^256 * 997 / 1000`). No finding: rounding goes against the protocol, never the maker.
+
 ## 2026-10-19 audit: pool initialize and add-liquidity gating
 
 **Trigger:** swarm issue #12
