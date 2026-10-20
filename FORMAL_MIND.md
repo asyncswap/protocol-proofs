@@ -2,6 +2,28 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: updatePrice gating and escrow immutability
+
+**Trigger:** swarm issue #17
+
+**What:** New `ProtocolProofs/Audit/UpdatePrice.lean` models one pool's order book
+(`orders[id] = {amountIn, amountOutMin}`, src/libraries/AsyncFiller.sol:26-33), the order id
+as an abstract hash of `(pool, owner, zeroForOne, salt)` (src/types/AsyncOrder.sol:47-49),
+`updatePrice` (src/AsyncSwap.sol:258-261, src/libraries/AsyncFiller.sol:71-85) and
+`updatePriceWithSig` (src/AsyncSwap.sol:361-379) with the signature check as a boolean.
+
+**Proved:** `updatePrice_auth` (caller is `order.owner` and the new limit is nonzero;
+executors have no say), `updatePrice_requires_open` (reverts unless `amountIn ≠ 0`),
+`updatePrice_preserves_escrow` (every `amountIn` unchanged, other orders untouched, only
+`amountOutMin` of the addressed order set), `updatePrice_no_resurrect` (a closed record
+stays as it is), `updatePrice_only_own_orders` (if the hash is injective, a changed record
+belongs to the caller, so a stale or forged struct cannot reach another maker's order) and
+`updatePriceWithSig_auth` (needs the maker's signature, then has the same effect as the maker
+calling `updatePrice`).
+
+**Result:** the invariant holds; no finding. The calldata `amountIn`/`amountOutMin` are
+never read by this path, and the nonce map is outside the model.
+
 ## 2026-10-19 — audit: owner sweep and FeeVault collect cannot reach maker escrow
 
 **Trigger:** swarm issue #11
