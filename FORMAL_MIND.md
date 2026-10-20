@@ -2,6 +2,30 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: updatePrice front-run is bounded by maxPrice; native debit equals fill pull
+
+**Trigger:** swarm issue #19
+
+**What:** New `ProtocolProofs/Audit/UpdatePriceFill.lean` extends the #17 order book with
+`calculatePoolFee` (src/AsyncSwap.sol:223-227), `AsyncFiller.fill` (src/libraries/AsyncFiller.sol:94-130),
+`executeOrder` with the transient `PENDING_NATIVE_DEPOSIT` ledger (src/AsyncSwap.sol:233-254,
+414-419) and `Router.fillOrder` with its callback (src/Router.sol:141-165, 256-277). The issue
+named `FormalAgent/Audit/UpdatePrice.lean`; the audit lives under `ProtocolProofs/Audit/` and
+`UpdatePrice.lean` is #17's, so this is a new sibling file.
+
+**Proved:** `updatePrice_onlyMaker`, `updatePrice_rejects_zero`, `updatePrice_rejects_closed`,
+`updatePrice_preserves_amountIn`; `executeOrder_native_debit_eq_pull` (the ledger drops by
+exactly the ETH `fill` settles, `amountOutMin + calculatePoolFee(amountOutMin)`);
+`fillOrder_paid_le_maxPrice` (a Router fill charges exactly the live price, at most `maxPrice`);
+`fillOrder_native_pending_restored` (a native Router fill leaves the ledger where it found it);
+`frontrun_bounded` (after any maker `updatePrice`, a fill that succeeds costs at most `maxPrice`,
+for native output exactly `msg.value`, and the filler still gets the original `amountIn`).
+
+**Result:** no finding. The front-run is lee-audit H-01, fixed by `maxPrice`; the native
+overpay is H-05, fixed by `msg.value == livePrice`; both fixes hold at e230f5b. A filler who
+passes `maxPrice = type(uint256).max` opts out of the cap, and an executor other than the Router
+is the maker's own choice and gets no cap from the hook.
+
 ## 2026-10-20 — audit: updatePrice gating and escrow immutability
 
 **Trigger:** swarm issue #17
