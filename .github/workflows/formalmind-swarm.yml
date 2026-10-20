@@ -289,7 +289,7 @@ jobs:
           token="${{ steps.app.outputs.token }}"
           if [ -z "$token" ]; then
             oidc=$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://formal.team" | jq -r .value)
-            reply=$(curl -sS -X POST -H "Authorization: Bearer $oidc" https://formal.team/api/swarm/token || true)
+            reply=$(curl -sS -X POST -H "Authorization: Bearer $oidc" "https://formal.team/api/swarm/token?role=$ROLE&ref=$NUMBER" || true)
             token=$(jq -r '.github_token // empty' <<<"$reply" 2>/dev/null || true)
             [ -n "$token" ] && echo "::add-mask::$token" || echo "formal.team: $(jq -r '.error // empty' <<<"$reply" 2>/dev/null)"
             model=$(jq -r '.model_key // empty' <<<"$reply" 2>/dev/null || true)
