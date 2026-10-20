@@ -2,6 +2,28 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: order creation never overwrites a live order; beforeSwap escrows the exact input
+
+**Trigger:** swarm issue #18
+
+**What:** New `ProtocolProofs/Audit/OrderCreate.lean`, imported from `ProtocolProofs.lean`
+(the issue named `FormalAgent/Audit/`; the audit files live under `ProtocolProofs/Audit/` since #14).
+Models one pool's order book as `Id → Info`, `_createOrder` (src/AsyncSwap.sol:302-327) with
+keccak abstract (`rehash`, `idOf`) and the collision walk run with gas `fuel` (out of gas
+reverts), and `_beforeSwap` (src/AsyncSwap.sol:271-299).
+
+**Proved:** `createOrder_preserves_live` (every slot with `amountIn ≠ 0` keeps its `OrderInfo`),
+`createOrder_slot` (the chosen slot was free, now holds exactly `(amountIn, amountOutMin)`, both
+nonzero, all other slots unchanged), `beforeSwap_escrow_eq_input` (escrow taken
+`= -amountSpecified > 0` and equals the new order's `amountIn`), `beforeSwap_exactInputOnly`
+(exact output, `sender ≠ executor` and zero amount revert), plus `walk_free`, `walk_isSome`
+(the walk returns when a free salt is on the chain within the fuel) and `walk_base`.
+
+**Result:** the invariant holds; no finding. `id_reused_after_delete` shows an id can be reused
+after a fill or cancel, but only by the same maker, same block, same `(amountIn, amountOutMin)`,
+so a stale fill or unused `updatePriceWithSig` hits an order with identical terms.
+Informational at most.
+
 ## 2026-10-20 — audit: updatePrice front-run is bounded by maxPrice; native debit equals fill pull
 
 **Trigger:** swarm issue #19
