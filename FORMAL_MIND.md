@@ -2,6 +2,28 @@
 
 Newest first. Every merged PR adds an entry.
 
+## 2026-10-20 — audit: two-step ownership transfer is sound
+
+**Trigger:** swarm issue #20
+
+**What:** New `ProtocolProofs/Audit/Ownership.lean` models the `owner`/`pendingOwner` slots
+of `AsyncSwap` (src/AsyncSwap.sol:40,43) and their only four writers: the constructor
+(src/AsyncSwap.sol:120-130), `transferOwnership` behind `onlyOwner`
+(src/AsyncSwap.sol:94-97,135-139) and `acceptOwnership` (src/AsyncSwap.sol:142-147); every
+other entry point is one `other` step that leaves them alone. Placed under
+`ProtocolProofs/Audit/` like the other audit files, not `FormalAgent/Audit/` as the issue
+named.
+
+**Proved:** `transferOwnership_onlyOwner`, `transferOwnership_nonzero` (nominee is nonzero,
+owner unchanged), `acceptOwnership_onlyPending` (caller is the nominee and becomes owner),
+`acceptOwnership_clears` (`pendingOwner = 0` afterwards), `acceptOwnership_none_pending`
+(with no nomination a nonzero sender cannot accept), `init_owner` (constructor owner nonzero,
+no nomination) and `run_owner_nonzero` (after any history of calls by nonzero senders the
+owner is never `address(0)`).
+
+**Result:** the invariant holds; no finding. There is no `renounceOwnership`, and no way to
+withdraw a nomination short of overwriting it (the owner can nominate itself).
+
 ## 2026-10-20 — audit: updatePrice front-run is bounded by maxPrice; native debit equals fill pull
 
 **Trigger:** swarm issue #19
